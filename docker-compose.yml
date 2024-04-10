@@ -1,6 +1,7 @@
-services:
+version: "3.7"
 
-  app-php-apache:
+services:
+  app:
     build:
       args:
         container_project_path: /var/www/html/
@@ -10,32 +11,51 @@ services:
       context: .
       dockerfile: ./Dockerfile
     image: app-php-apache
-    ports:
-      - 80:80
+    container_name: npca-app
+    restart: unless-stopped
+    working_dir: /var/www
     volumes:
-      - ./workspace/:/var/www/html/
-
-  app-mysql:
+      - ./:/var/www
+    networks:
+      - network-name
+      
+  db:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
+    container_name: db-npca
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - 3306:3306
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}  
     volumes:
-      - mysql-data:/var/lib/mysql/
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - network-name
 
-  app-phpmyadmin:
-    image: phpmyadmin:latest
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container-name
     restart: always
     environment:
-      PMA_HOST: app-mysql
-      PMA_USER: root
-      PMA_PASSWORD: root
+      PMA_HOST: db
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
     ports:
-      - 3333:80
+      - 8081:80
+    networks:
+      - network-name
 
-volumes:
-  mysql-data:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-container-name
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx/npca.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - network-name
+
+networks:
+  network-name:
+    driver: bridge

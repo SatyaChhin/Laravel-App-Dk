@@ -16,24 +16,19 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        // Truncate existing data
         DB::table('users')->truncate();
-
-        // Generate unique user data using Faker
         $faker = Faker::create();
 
         $users = [];
-        for ($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $users[] = [
                 'name' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
-                'password' => Hash::make('password'), // Hash the password
+                'password' => Hash::make('password'), 
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
         }
-
-        // Insert the generated data into the database
         DB::table('users')->insert($users);
     }
 }
